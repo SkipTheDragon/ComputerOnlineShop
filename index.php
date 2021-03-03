@@ -7,8 +7,7 @@ use Core\Request;
 require 'config.php';
 
 spl_autoload_register(static function ($class_name) {
-    $class_path = CONFIG['PATH'].'/'.str_replace("\\","/",$class_name) . '.php';
-
+    $class_path = CONFIG["PATHS"]["ROOT"].'/src/'.str_replace("\\","/",$class_name) . ".php";
     if (file_exists($class_path)) {
         require $class_path;
     } else {
@@ -16,7 +15,5 @@ spl_autoload_register(static function ($class_name) {
     }
 
 });
-
-$request = new Request(new Core());
-$request->handle($_POST,$_GET);
+$request = new Request(new Core(), $_POST, $_GET);
 
