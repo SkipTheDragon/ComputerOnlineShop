@@ -1,5 +1,5 @@
 <?php
-namespace Core;
+namespace Core\Routes;
 
 use JsonException;
 use ReflectionAttribute;
@@ -13,13 +13,16 @@ class Router
 {
     private string $routesCacheLocation = CONFIG["PATHS"]["STORAGE"].'/routes.json';
     private Route $currentRoute;
+    private string $url;
 
     /**
      * Router constructor.
      * @param string $url
      */
-    public function __construct(private string $url)
+    public function __construct(string $url)
     {
+        $this->url = "/".$url;
+
         $this->guessRoute();
     }
 
@@ -100,65 +103,28 @@ class Router
 
     private function guessRoute() : void {
         $routes = $this->getAllRoutes();
-
-        $urlPieces = array_filter((explode("/", $this->url)));
-        $urlPiecesNo = count($urlPieces);
-
-        $ranks = array();
+        $matchingRoutes = [];
 
         /** @var Route $route */
         foreach ($routes as $route) {
-            $pagePieces = explode("/", $route->getPath());
-            $pagePieces = array_values(array_filter($pagePieces));
-
-            $slugs = array();
-            $rank = array();
-
-            if (empty($pagePieces)) {
-                $pagePieces = array("/");
-            }
-
-            if (empty($urlPieces)) { // if url is empty search for homepage
-                $urlPieces = array("/");
-
-                if ($pagePieces[0] === $urlPieces[0]) {
-                    $this->currentRoute = $route;
-                    return;
-                }
-            }
-
-            $pagePiecesNo = count($pagePieces);
-
-            // skip all routes that are shorter than the url
-            if ($urlPiecesNo > $pagePiecesNo) {
-                $ranks[] = 0; // add a default value to route rank so we can keep it the same size as routes array
-                continue;
-            }
-            // if the first part of the query does not match we skip other checks
-            if ($urlPieces[0] !== $pagePieces[0]) {
-                continue;
-            }
-
-            for ($i = 0; $i < $urlPiecesNo; $i++) {
-
-                if ($urlPieces[$i] === $pagePieces[$i]) {
-                    $rank[] = 10;
-                } elseif (str_starts_with($pagePieces[$i],"{") && str_ends_with($pagePieces[$i],"}")) {
-                    $slugs[] = array($pagePieces[$i] => $urlPieces[$i]);
-                    $rank[] = 1;
-                }
-
-            }
-
-            $ranks[] = array_sum($rank);
-
-            if (count($ranks) === $pagePiecesNo) {
-                $route->setSlugs($slugs);
+            if ($route->match($this->url)) {
+                $matchingRoutes[] = $route;
             }
         }
-        $max_keys = array_keys($ranks, max([max($ranks)]));
+        if (count($matchingRoutes) > 1) {
+            usort($matchingRoutes, static function ($route1, $route2) {
 
-        $this->currentRoute = $routes[$max_keys[0]];
+                if ($route1->getConstantsNo() > $route2->getConstantsNo() &&
+                    $route1->getMatches() < $route2->getMatches() ) {
+                    return -1;
+                }
+
+                return 1;
+            });
+
+        }
+
+        $this->currentRoute = $matchingRoutes[0];
     }
 
 

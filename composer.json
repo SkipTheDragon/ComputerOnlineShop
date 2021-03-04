@@ -1,0 +1,21 @@
+{
+    "name": "leonard/pcg",
+    "type": "project",
+    "require-dev": {
+        "phpunit/phpunit": "9.*"
+    },
+    "authors": [
+        {
+            "name": "Tudorache Leonard Valentin",
+            "email": "valileo2000@gmail.com"
+        }
+    ],
+    "description": "",
+
+    "autoload": {
+        "classmap": [
+            "src/",
+            "tests/"
+        ]
+    }
+}

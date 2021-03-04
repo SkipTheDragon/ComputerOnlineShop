@@ -6,14 +6,7 @@ use Core\Request;
 
 require 'config.php';
 
-spl_autoload_register(static function ($class_name) {
-    $class_path = CONFIG["PATHS"]["ROOT"].'/src/'.str_replace("\\","/",$class_name) . ".php";
-    if (file_exists($class_path)) {
-        require $class_path;
-    } else {
-        throw new \RuntimeException("CANNOT LOAD $class_name");
-    }
+require __DIR__ . '/vendor/autoload.php';
 
-});
 $request = new Request(new Core(), $_POST, $_GET);
-
+$request->route();
